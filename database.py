@@ -203,6 +203,55 @@ def get_low_attendance_students(threshold):
 
     return results
 
+def get_student_average_marks(student_id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT AVG(marks)
+        FROM marks
+        WHERE student_id = ?
+    """, (student_id,))
+
+    result = cursor.fetchone()
+
+    connection.close()
+
+    return result[0] if result and result[0] is not None else None
+
+def get_student_performance(student_id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT subject, marks
+        FROM marks
+        WHERE student_id = ?
+        ORDER BY marks DESC
+    """, (student_id,))
+
+    results = cursor.fetchall()
+
+    connection.close()
+
+    return results
+
+def get_student_attendance_analysis(student_id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT subject, percentage
+        FROM attendance
+        WHERE student_id = ?
+        ORDER BY percentage DESC
+    """, (student_id,))
+
+    results = cursor.fetchall()
+
+    connection.close()
+
+    return results
 
 if __name__ == "__main__":
     create_tables()
