@@ -236,6 +236,48 @@ def get_student_performance(student_id):
 
     return results
 
+def add_student(name, email, department, semester, section):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO students
+        (name, email, department, semester, section)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        name,
+        email,
+        department,
+        semester,
+        section
+    ))
+
+    student_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return student_id
+
+def add_student_marks(student_id, subject, marks):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO marks
+        (student_id, subject, marks)
+        VALUES (?, ?, ?)
+    """, (
+        student_id,
+        subject,
+        marks
+    ))
+
+    connection.commit()
+    connection.close()
+
+    return True
+
 def get_student_attendance_analysis(student_id):
     connection = get_connection()
     cursor = connection.cursor()

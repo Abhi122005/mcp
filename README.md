@@ -1,100 +1,134 @@
 # College AI Assistant
 
-A compact assistant for exploring and querying student records (profiles, marks, attendance). This repository provides a small local demo using an MCP-style tool server plus a Gemini-based assistant and a simple web UI.
+A local AI assistant for exploring student profiles, marks, attendance, and academic performance. The project combines a Gemini-powered agent, an MCP-style tool server backed by SQLite, a FastAPI API, and a lightweight browser interface.
 
-## Quick Start
+## Features
 
-1. Create and activate a Python virtual environment (recommended):
+- Search students by name and retrieve profile details.
+- Review subject marks, averages, strongest and weakest subjects.
+- Review subject attendance and find students below a threshold.
+- Add students and marks through assistant requests.
+- Use the same agent through either the CLI or the web application.
 
-```bash
+## Requirements
+
+- Python 3.10 or later
+- A Gemini API key
+- PowerShell, Command Prompt, or another Python-compatible shell
+
+## Setup
+
+From the project root, create and activate a virtual environment:
+
+```powershell
 python -m venv venv
-# Windows PowerShell
 venv\Scripts\Activate.ps1
-# Windows CMD
-venv\Scripts\activate.bat
 ```
 
-2. Install dependencies:
+On Windows Command Prompt, use `venv\Scripts\activate.bat` instead. Install the pinned dependencies:
 
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
-3. Add your Gemini API key to a `.env` file at the project root:
+Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-4. Initialize the local database (creates `college.db` and seeds sample data):
+Initialize the sample SQLite database:
 
-```bash
+```powershell
 python database.py
 ```
 
-5. Start the MCP tool server (tooling used by the assistant):
+This creates `college.db` and seeds the sample student records.
 
-```bash
-python server.py
-```
+## Run The CLI
 
-6a. Run the CLI assistant:
+Start an interactive assistant session:
 
-```bash
+```powershell
 python ai_agent.py
 ```
 
-6b. Or run the HTTP API and use the web UI:
+The CLI starts the MCP tool server as needed. You do not need to run `server.py` separately.
 
-```bash
+## Run The Web App
+
+Start the API in one terminal:
+
+```powershell
 uvicorn api:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Then open `web/index.html` in a browser (or visit the API at `http://127.0.0.1:8000`).
+Serve the static frontend from the `web` directory in a second terminal. Serving it on port `5500` matches the API's local CORS configuration:
+
+```powershell
+python -m http.server 5500 --directory web
+```
+
+Open <http://127.0.0.1:5500> in your browser. The API and interactive documentation are available at <http://127.0.0.1:8000> and <http://127.0.0.1:8000/docs>.
 
 ## Configuration
 
-Key settings are in `config/settings.py` and can be overridden via environment variables. Notable defaults:
+Configuration defaults are defined in `config/settings.py`:
 
-- `GEMINI_MODEL` — default Gemini model
-- `MCP_SERVER_COMMAND` / `MCP_SERVER_FILE` — command used to launch the MCP server
+- `GEMINI_API_KEY` — loaded from the environment or root `.env` file.
+- `GEMINI_MODEL` — Gemini model name, defaulting to `gemini-2.5-flash`.
+- `MCP_SERVER_COMMAND` — command used to start the tool server, defaulting to `python`.
+- `MCP_SERVER_FILE` — tool server entry point, defaulting to `server.py`.
 
-The project reads `GEMINI_API_KEY` from `.env`.
+## API
+
+### Health check
+
+```http
+GET /health
+```
+
+Example response:
+
+```json
+{"status":"ok","service":"College AI Assistant"}
+```
+
+### Chat
+
+```http
+POST /chat
+Content-Type: application/json
+
+{"message":"What are Abhishek's marks?"}
+```
+
+The response includes a session ID that can be sent with subsequent messages to preserve conversation context:
+
+```json
+{"session_id":"session-uuid","response":"..."}
+```
 
 ## Project Layout
 
-- `ai_agent.py` — CLI client that starts an interactive assistant session
-- `api.py` — FastAPI app exposing `/chat` and health endpoints
-- `server.py` — MCP-style tool server with student data tools and prompts
-- `database.py` — SQLite helpers, schema creation, and sample data seeding
-- `config/settings.py` — Gemini and MCP server configuration
-- `agent/` — adapter code that integrates Gemini and MCP tools
-- `web/` — static frontend: `index.html`, `script.js`, `style.css`
-- `requirements.txt` — Python dependencies
-
-## API Endpoints
-
-- `GET /` — basic health check
-- `GET /health` — service status
-- `POST /chat` — chat endpoint (JSON `{ "message": "...", "session_id": "..." }`)
-
-Response format is `{ "session_id": "...", "response": "..." }`.
-
-## Development Notes
-
-- Re-run `python database.py` to recreate the sample database.
-- For local development, use the `.env` file and `uvicorn --reload` for live reloads.
-- Consider adding `docker-compose.yml` and a `Makefile` to simplify startup.
+| Path | Purpose |
+| --- | --- |
+| `ai_agent.py` | Interactive CLI client |
+| `api.py` | FastAPI application and chat endpoints |
+| `server.py` | MCP-style student data tools |
+| `database.py` | SQLite schema, queries, and sample data |
+| `agent/` | Gemini agent and MCP integration |
+| `config/settings.py` | Environment-backed configuration |
+| `web/` | Static browser interface |
+| `requirements.txt` | Pinned Python dependencies |
 
 ## Troubleshooting
 
-- If the web UI cannot connect, confirm `uvicorn api:app` is running and reachable at `127.0.0.1:8000`.
-- If Gemini authentication fails, verify `GEMINI_API_KEY` and account quotas.
-
-## Contributing
-
-Contributions are welcome. Open an issue or submit a pull request with a clear description of changes and steps to reproduce.
+- **Web UI cannot connect:** Confirm both servers are running, then open the UI at `http://127.0.0.1:5500` rather than opening `index.html` directly.
+- **Gemini authentication fails:** Check `GEMINI_API_KEY` in `.env` and confirm the key has access to the configured model.
+- **Database records are missing:** Run `python database.py` from the project root to recreate and reseed `college.db`.
+- **MCP startup fails:** Run commands from the project root and verify that the virtual environment is active.
 
 ## License
 
-This project is provided as-is for demonstration and learning purposes. Add a license file if you plan to publish or redistribute.
+This project is provided as-is for demonstration and learning purposes.

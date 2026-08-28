@@ -8,7 +8,9 @@ from database import (
     get_low_attendance_students as get_low_attendance_students_db,
     get_student_average_marks as get_student_average_marks_db,
     get_student_performance as get_student_performance_db,
-    get_student_attendance_analysis as get_student_attendance_analysis_db
+    get_student_attendance_analysis as get_student_attendance_analysis_db,
+    add_student as add_student_db,
+    add_student_marks as add_student_marks_db
 )
 
 
@@ -243,6 +245,65 @@ def get_student_academic_summary(student_id: int) -> str:
         )
 
     return result
+
+@mcp.tool()
+def add_student(
+    name: str,
+    email: str,
+    department: str,
+    semester: int,
+    section: str
+) -> str:
+    """Add a new student to the college database."""
+
+    try:
+        student_id = add_student_db(
+            name,
+            email,
+            department,
+            semester,
+            section
+        )
+
+        return (
+            f"Student added successfully.\n"
+            f"Student ID: {student_id}\n"
+            f"Name: {name}\n"
+            f"Department: {department}\n"
+            f"Semester: {semester}\n"
+            f"Section: {section}"
+        )
+
+    except Exception as error:
+        return f"Unable to add student: {error}"
+@mcp.tool()
+def add_marks(
+    student_id: int,
+    subject: str,
+    marks: float
+) -> str:
+    """Add marks for a student. Use search_students first when only the student's name is provided."""
+
+    if marks < 0 or marks > 100:
+        return "Invalid marks. Marks must be between 0 and 100."
+
+    student = get_student(student_id)
+
+    if not student:
+        return f"No student found with ID {student_id}."
+
+    add_student_marks_db(
+        student_id,
+        subject,
+        marks
+    )
+
+    return (
+        f"Marks added successfully.\n"
+        f"Student: {student[1]}\n"
+        f"Subject: {subject}\n"
+        f"Marks: {marks}"
+    )
 
 @mcp.resource("college://information")
 def college_information() -> str:
